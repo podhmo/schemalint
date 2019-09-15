@@ -2,7 +2,7 @@ import os.path
 import subprocess
 import logging
 from schemalint.loader import get_loader  # todo: rename
-from schemalint.formatter import get_describer  # todo: rename
+from schemalint.formatter import get_formatter  # todo: rename
 
 logger = logging.getLogger(__name__)
 
@@ -18,10 +18,10 @@ def run(filename: str):
     # loading.dumpfile(doc)
 
     if loader.errors:
-        describer = get_describer(filename, loader=loader)
+        formatter = get_formatter(filename, loader=loader)
         print("?", len(loader.errors))
         for err in loader.errors:
-            print(describer.describe(err))
+            print(formatter.format(err))
 
 
 def main(argv=None):
