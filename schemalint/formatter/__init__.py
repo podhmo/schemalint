@@ -8,7 +8,7 @@ from schemalint.loader.errors import (
     ParseError,
     ResolutionError,
 )  # todo: move
-from schemalint.loader import DataScanner
+from schemalint.loader import Loader
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ class Detector:
         else:
             return "WARNING"
 
-    def detect_scanning_start_point(self, err: LintError) -> (Mark, Mark):
+    def detect_loadning_start_point(self, err: LintError) -> (Mark, Mark):
         if err.data is None:
             return self.detect_error_point(err)
         map_node = self.store.lookup_node(err.data)
@@ -71,7 +71,7 @@ class Describer:
         else:
             msg = repr(err.inner)
 
-        start_mark, end_mark = self.detector.detect_scanning_start_point(err)
+        start_mark, end_mark = self.detector.detect_loadning_start_point(err)
         filename = os.path.relpath(start_mark.name, start=".")
 
         where = [os.path.relpath(name) for name in err.history]
@@ -82,7 +82,7 @@ class Describer:
         return f"status:{status}	cls:{err.__class__.__name__}	filename:{filename}	start:{start_mark.line+1}@{start_mark.column}	end:{end_mark.line+1}@{end_mark.column}	msg:{msg}	where:{where}"
 
     def describe_resolution_error(self, err: ResolutionError) -> str:
-        start_mark, end_mark = self.detector.detect_scanning_start_point(err)
+        start_mark, end_mark = self.detector.detect_loadning_start_point(err)
         filename = os.path.relpath(start_mark.name, start=".")
         status = self.detector.detect_status(err.history[-1])
         msg = repr(err.inner)
@@ -94,5 +94,5 @@ class Describer:
         return f"status:{status}	cls:{err.__class__.__name__}	filename:{filename}	start:{start_mark.line+1}@{start_mark.column}	end:{end_mark.line+1}@{end_mark.column}	msg:{msg}	where:{where}"
 
 
-def get_describer(filename: str, *, scanner: DataScanner) -> Describer:
-    return Describer(filename, store=scanner.store)
+def get_describer(filename: str, *, loader: Loader) -> Describer:
+    return Describer(filename, store=loader.store)

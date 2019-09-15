@@ -1,7 +1,7 @@
 import os.path
 import subprocess
 import logging
-from schemalint.loader import get_scanner  # todo: rename
+from schemalint.loader import get_loader  # todo: rename
 from schemalint.formatter import get_describer  # todo: rename
 
 logger = logging.getLogger(__name__)
@@ -10,17 +10,17 @@ logger = logging.getLogger(__name__)
 def run(filename: str):
     filename = os.path.abspath(filename)
 
-    scanner = get_scanner(filename)
-    doc = scanner.scan()
+    loader = get_loader(filename)
+    doc = loader.load()
     print("----------------------------------------")
     subprocess.run(["cat", "-n", filename])
     # from dictknife import loading
     # loading.dumpfile(doc)
 
-    if scanner.errors:
-        describer = get_describer(filename, scanner=scanner)
-        print("?", len(scanner.errors))
-        for err in scanner.errors:
+    if loader.errors:
+        describer = get_describer(filename, loader=loader)
+        print("?", len(loader.errors))
+        for err in loader.errors:
             print(describer.describe(err))
 
 
