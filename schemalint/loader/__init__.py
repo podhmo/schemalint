@@ -11,7 +11,7 @@ from . import internal
 logger = logging.getLogger(__name__)
 
 
-class DataScanner:  # todo: rename
+class Loader:
     def __init__(self, resolver, *, store: internal.NodeStore):
         self.resolver = resolver
         self.accessor = StackedAccessor(resolver)
@@ -20,7 +20,7 @@ class DataScanner:  # todo: rename
         self.errors = []
         self.store = store
 
-    def scan(self, doc=None, resolver=None):
+    def load(self, doc=None, resolver=None):
         if not doc and doc is not None:
             return doc
         resolver = resolver or self.resolver
@@ -31,13 +31,13 @@ class DataScanner:  # todo: rename
                 self.errors.append(ParseError(e, history=[resolver.filename]))
             if doc is None:
                 doc = {}
-        doc, _ = self._scan(doc, resolver=resolver, seen={})
+        doc, _ = self._load(doc, resolver=resolver, seen={})
         return doc
 
-    def _scan(self, doc, *, resolver, seen: dict):
+    def _load(self, doc, *, resolver, seen: dict):
         if "$ref" in doc:
             original = self.accessor.access(doc["$ref"])
-            new_doc, _ = self._scan(
+            new_doc, _ = self._load(
                 original, resolver=self.accessor.resolver, seen=seen
             )
             return new_doc, self.accessor.pop_stack()
@@ -49,7 +49,7 @@ class DataScanner:  # todo: rename
                         continue
 
                     seen[uid] = sd
-                    new_sd, sresolver = self._scan(sd, resolver=resolver, seen=seen)
+                    new_sd, sresolver = self._load(sd, resolver=resolver, seen=seen)
                     if resolver.filename != sresolver.filename:
                         container = self.accessing.access(doc, path[:-1])
                         if not hasattr(container, "parents"):
@@ -96,9 +96,9 @@ class _Adapter:
             return yaml.load(rf, Loader=self.yamlloader_factory)
 
 
-def get_scanner(filename: str) -> DataScanner:
+def get_loader(filename: str) -> Loader:
     store = internal.NodeStore()
     yaml_loader_factory = internal.YAMLLoaderFactory(internal.YAMLLoader, store=store)
 
     resolver = get_resolver(filename, loader=_Adapter(yaml_loader_factory))
-    return DataScanner(resolver, store=store)
+    return Loader(resolver, store=store)
