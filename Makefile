@@ -1,6 +1,9 @@
 test:
 	python setup.py test
 
+run:
+	$(MAKE) -C examples/run
+
 format:
 #	pip install -e .[dev]
 	black schemalint setup.py
