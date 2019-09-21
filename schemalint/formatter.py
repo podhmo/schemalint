@@ -61,6 +61,10 @@ class Detector:
         mark = getattr(err.inner, "context_mark")
         import copy
 
+        if mark is None:
+            mark = getattr(err.inner, "problem_mark")
+            mark.line -= 1  # xxx
+
         start_mark = copy.deepcopy(mark)
         start_mark.column = 0
         end_mark = copy.deepcopy(mark)
