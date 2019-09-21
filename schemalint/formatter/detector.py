@@ -1,10 +1,7 @@
 from yaml.error import Mark
 from schemalint.loader.internal import NodeStore  # todo: move
-from schemalint.loader.errors import (
-    LintError,
-    ParseError,
-    ResolutionError,
-)  # todo: move
+from schemalint.errors import LintError
+
 
 # TODO: move
 

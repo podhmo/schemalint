@@ -1,11 +1,7 @@
 import os.path
 import logging
 from schemalint.loader import Loader
-from schemalint.loader.errors import (
-    LintError,
-    ParseError,
-    ResolutionError,
-)  # todo: move
+from schemalint.errors import Error, ParseError, ResolutionError  # todo: move
 from .detector import Detector
 
 

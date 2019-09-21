@@ -5,14 +5,14 @@ from dataclasses import dataclass, field
 from dictknife import loading
 from dictknife.langhelpers import reify
 
-from .loader.errors import LintError
+from .errors import Error
 from .loader import get_loader, Loader
-from .validator import get_validator
+from .validator import get_validator, Validator
 
 
 @dataclass(frozen=True)
 class ErrorEvent:
-    error: LintError  # xxx
+    error: Error  # xxx
     context: Context
 
 
@@ -31,7 +31,7 @@ class Stream:  # todo: to protocol
 
 
 class StreamFromLoader(Stream):
-    def __init__(self, ctx: Context, *, loader) -> None:
+    def __init__(self, ctx: Context, *, loader: Loader) -> None:
         self.context = ctx
         self.loader = loader
 
@@ -55,13 +55,13 @@ def from_filename(filepath: str, ctx: t.Optional[Context] = None) -> StreamFromL
     return from_loader(loader, ctx=ctx)
 
 
-def from_loader(loader, *, ctx: t.Optional[Context] = None) -> StreamFromLoader:
+def from_loader(loader: Loader, *, ctx: t.Optional[Context] = None) -> StreamFromLoader:
     ctx = ctx or Context()
     return StreamFromLoader(ctx, loader=loader)
 
 
 class StreamWithValidator(Stream):
-    def __init__(self, stream: StreamFromLoader, *validator) -> None:
+    def __init__(self, stream: StreamFromLoader, *, validator: Validator) -> None:
         self._stream = stream
         self.validator = validator
 
@@ -76,7 +76,7 @@ class StreamWithValidator(Stream):
             yield ErrorEvent(context=self._stream.context, error=err)
 
 
-def with_validator(s: StreamFromLoader, validator) -> StreamWithValidator:
+def with_validator(s: StreamFromLoader, validator: Validator) -> StreamWithValidator:
     return StreamWithValidator(s, validator=validator)
 
 
