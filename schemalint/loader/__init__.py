@@ -1,11 +1,13 @@
 import logging
 import yaml
 from collections import ChainMap
+
 from dictknife import DictWalker, Accessor
 from dictknife.jsonknife.accessor import StackedAccessor, is_ref
 from dictknife.langhelpers import make_dict
 from dictknife.jsonknife import get_resolver
-from .errors import ParseError, ResolutionError
+
+from schemalint.errors import ParseError, ResolutionError
 from . import internal
 
 logger = logging.getLogger(__name__)

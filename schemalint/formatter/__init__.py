@@ -1,11 +1,7 @@
 import os.path
 import logging
 from schemalint.loader import Loader
-from schemalint.loader.errors import (
-    LintError,
-    ParseError,
-    ResolutionError,
-)  # todo: move
+from schemalint.errors import Error, ParseError, ResolutionError, ValidationError
 from .detector import Detector
 
 
@@ -19,11 +15,13 @@ class ErrorFormatter:
         self.filename = filename
         self.detector = detector
 
-    def format(self, err: LintError) -> str:
+    def format(self, err: Error) -> str:
         if isinstance(err, ParseError):
             return self.format_parse_error(err)
         elif isinstance(err, ResolutionError):
             return self.format_resolution_error(err)
+        elif isinstance(err, ValidationError):
+            return self.format_validation_error(err)
         else:
             raise err
 
@@ -54,6 +52,18 @@ class ErrorFormatter:
         where[0] = f"{where[0]}:{start_mark.line+1}"
         if self.detector.has_error_point(err):
             where[-1] = f"{where[-1]}:{err.inner.problem_mark.line+1}"
+        return f"status:{status}	cls:{err.__class__.__name__}	filename:{filename}	start:{start_mark.line+1}@{start_mark.column}	end:{end_mark.line+1}@{end_mark.column}	msg:{msg}	where:{where}"
+
+    def format_validation_error(self, err: ValidationError) -> str:
+        status = "ERROR"
+        msg = f"{err.message} (validator={err.validator})"
+        node = self.detector.store.lookup_node(err.instance)  # xxx
+
+        start_mark, end_mark = node.start_mark, node.end_mark
+
+        filename = os.path.relpath(start_mark.name, start=".")
+        where = [os.path.relpath(filename)]
+        where[0] = f"{where[0]}:{start_mark.line+1}"
         return f"status:{status}	cls:{err.__class__.__name__}	filename:{filename}	start:{start_mark.line+1}@{start_mark.column}	end:{end_mark.line+1}@{end_mark.column}	msg:{msg}	where:{where}"
 
 

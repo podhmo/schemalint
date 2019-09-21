@@ -1,3 +1,9 @@
+import typing as t
+import jsonschema
+
+ValidationError = jsonschema.ValidationError  # noqa
+
+
 class LintError(Exception):
     def __init__(
         self, inner: str, *, history: list, path: list = None, data: dict = None
@@ -20,3 +26,6 @@ class ParseError(LintError):
 class ResolutionError(LintError):
     # usually, inner is KeyError or FileNotFoundError
     pass
+
+
+Error = t.Union[LintError, ValidationError]
