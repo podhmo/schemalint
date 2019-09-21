@@ -1,5 +1,9 @@
+import typing as t
 import os.path
 import logging
+
+from typing_extensions import TypedDict, Protocol
+
 from schemalint.loader import Loader
 from schemalint.errors import Error, ParseError, ResolutionError, ValidationError
 from .detector import Detector
@@ -8,12 +12,38 @@ from .detector import Detector
 logger = logging.getLogger(__name__)
 
 
+class OutputDict(TypedDict):
+    status: str
+    errortype: str
+    filename: str
+
+    start: str
+    end: str
+
+    msg: str
+    where: str
+
+
+class Layout(Protocol):
+    def layout(self, d: OutputDict) -> str:
+        ...
+
+
+class LTSVLayout(Layout):
+    def layout(self, d: OutputDict) -> str:
+        return "\t".join(f"{k}:{v}" for k, v in d.items())
+
+
 class ErrorFormatter:
     detector: Detector
+    layout: Layout
 
-    def __init__(self, filename: str, *, detector: Detector):
+    def __init__(
+        self, filename: str, *, detector: Detector, layout: t.Optional[Layout] = None
+    ):
         self.filename = filename
         self.detector = detector
+        self.layout = layout or LTSVLayout()
 
     def format(self, err: Error) -> str:
         if isinstance(err, ParseError):
@@ -40,7 +70,17 @@ class ErrorFormatter:
         if self.detector.has_error_point(err):
             where[-1] = f"{where[-1]}:{err.inner.problem_mark.line+1}"
 
-        return f"status:{status}	cls:{err.__class__.__name__}	filename:{filename}	start:{start_mark.line+1}@{start_mark.column}	end:{end_mark.line+1}@{end_mark.column}	msg:{msg}	where:{where}"
+        return self.layout.layout(
+            OutputDict(
+                status=status,
+                errortype=err.__class__.__name__,
+                filename=filename,
+                start=f"{start_mark.line+1}@{start_mark.column}",
+                end=f"{end_mark.line+1}@{end_mark.column}",
+                msg=msg,
+                where=where,
+            )
+        )
 
     def format_resolution_error(self, err: ResolutionError) -> str:
         start_mark, end_mark = self.detector.detect_loadning_start_point(err)
@@ -52,7 +92,18 @@ class ErrorFormatter:
         where[0] = f"{where[0]}:{start_mark.line+1}"
         if self.detector.has_error_point(err):
             where[-1] = f"{where[-1]}:{err.inner.problem_mark.line+1}"
-        return f"status:{status}	cls:{err.__class__.__name__}	filename:{filename}	start:{start_mark.line+1}@{start_mark.column}	end:{end_mark.line+1}@{end_mark.column}	msg:{msg}	where:{where}"
+
+        return self.layout.layout(
+            OutputDict(
+                status=status,
+                errortype=err.__class__.__name__,
+                filename=filename,
+                start=f"{start_mark.line+1}@{start_mark.column}",
+                end=f"{end_mark.line+1}@{end_mark.column}",
+                msg=msg,
+                where=where,
+            )
+        )
 
     def format_validation_error(self, err: ValidationError) -> str:
         status = "ERROR"
@@ -64,7 +115,18 @@ class ErrorFormatter:
         filename = os.path.relpath(start_mark.name, start=".")
         where = [os.path.relpath(filename)]
         where[0] = f"{where[0]}:{start_mark.line+1}"
-        return f"status:{status}	cls:{err.__class__.__name__}	filename:{filename}	start:{start_mark.line+1}@{start_mark.column}	end:{end_mark.line+1}@{end_mark.column}	msg:{msg}	where:{where}"
+
+        return self.layout.layout(
+            OutputDict(
+                status=status,
+                errortype=err.__class__.__name__,
+                filename=filename,
+                start=f"{start_mark.line+1}@{start_mark.column}",
+                end=f"{end_mark.line+1}@{end_mark.column}",
+                msg=msg,
+                where=where,
+            )
+        )
 
 
 def get_formatter(filename: str, *, loader: Loader) -> ErrorFormatter:
