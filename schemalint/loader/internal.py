@@ -18,7 +18,7 @@ class NodeStore:
         self.cache[id(r)] = node
         return r
 
-    def lookup_node(self, data):
+    def lookup_node(self, data: object) -> object:
         return self.cache[id(data)]
 
 

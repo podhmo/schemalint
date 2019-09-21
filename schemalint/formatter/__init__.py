@@ -4,8 +4,8 @@ import logging
 
 from typing_extensions import TypedDict, Protocol
 
-from schemalint.loader import Loader
-from schemalint.errors import Error, ParseError, ResolutionError, ValidationError
+from schemalint.entity import ErrorEvent, Lookup
+from schemalint.errors import ParseError, ResolutionError, ValidationError
 from .detector import Detector
 
 
@@ -34,7 +34,7 @@ class LTSVLayout(Layout):
         return "\t".join(f"{k}:{v}" for k, v in d.items())
 
 
-class ErrorFormatter:
+class Formatter:
     detector: Detector
     layout: Layout
 
@@ -45,7 +45,8 @@ class ErrorFormatter:
         self.detector = detector
         self.layout = layout or LTSVLayout()
 
-    def format(self, err: Error) -> str:
+    def format(self, ev: ErrorEvent) -> str:
+        err = ev.error
         if isinstance(err, ParseError):
             return self.format_parse_error(err)
         elif isinstance(err, ResolutionError):
@@ -108,7 +109,7 @@ class ErrorFormatter:
     def format_validation_error(self, err: ValidationError) -> str:
         status = "ERROR"
         msg = f"{err.message} (validator={err.validator})"
-        node = self.detector.store.lookup_node(err.instance)  # xxx
+        node = self.detector.lookup.lookup_node(err.instance)  # xxx
 
         start_mark, end_mark = node.start_mark, node.end_mark
 
@@ -129,6 +130,6 @@ class ErrorFormatter:
         )
 
 
-def get_formatter(filename: str, *, loader: Loader) -> ErrorFormatter:
-    detector = Detector(filename, store=loader.store)
-    return ErrorFormatter(filename, detector=detector)
+def get_formatter(filename: str, *, lookup: Lookup) -> Formatter:
+    detector = Detector(filename, lookup=lookup)
+    return Formatter(filename, detector=detector)
