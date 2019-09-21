@@ -8,13 +8,13 @@ from dictknife.langhelpers import make_dict
 from dictknife.jsonknife import get_resolver
 
 from schemalint.errors import ParseError, ResolutionError
-from . import internal
+from . import _yaml
 
 logger = logging.getLogger(__name__)
 
 
 class Loader:
-    def __init__(self, resolver, *, store: internal.NodeStore):
+    def __init__(self, resolver, *, store: _yaml.NodeStore):
         self.resolver = resolver
         self.accessor = StackedAccessor(resolver)
         self.accessing = Accessor()
@@ -28,7 +28,7 @@ class Loader:
         resolver = resolver or self.resolver
         try:
             doc = doc or resolver.doc
-        except internal.MarkedYAMLError as e:
+        except _yaml.MarkedYAMLError as e:
             if e.problem_mark is not None:
                 self.errors.append(ParseError(e, history=[resolver.filename]))
             if doc is None:
@@ -76,7 +76,7 @@ class Loader:
                             history=[r.filename for r in self.accessor.stack],
                         )
                     )
-                except internal.MarkedYAMLError as e:
+                except _yaml.MarkedYAMLError as e:
                     if e.problem_mark is not None:
                         self.errors.append(
                             ParseError(
@@ -99,8 +99,8 @@ class _Adapter:
 
 
 def get_loader(filename: str) -> Loader:
-    store = internal.NodeStore()
-    yaml_loader_factory = internal.YAMLLoaderFactory(internal.YAMLLoader, store=store)
+    store = _yaml.NodeStore()
+    yaml_loader_factory = _yaml.YAMLLoaderFactory(_yaml.YAMLLoader, store=store)
 
     resolver = get_resolver(filename, loader=_Adapter(yaml_loader_factory))
     return Loader(resolver, store=store)
