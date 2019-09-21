@@ -5,7 +5,7 @@ from collections import ChainMap
 from dictknife import DictWalker, Accessor
 from dictknife.jsonknife.accessor import StackedAccessor, is_ref
 from dictknife.langhelpers import make_dict
-from dictknife.jsonknife import get_resolver
+from dictknife import jsonknife
 
 from schemalint.errors import ParseError, ResolutionError
 from . import _yaml
@@ -89,7 +89,7 @@ class Loader:
             return doc, resolver
 
 
-class _Adapter:
+class _DictknifeLoaderAdapter:
     def __init__(self, yamlloader_factory):
         self.yamlloader_factory = yamlloader_factory
 
@@ -102,5 +102,7 @@ def get_loader(filename: str) -> Loader:
     store = _yaml.NodeStore()
     yaml_loader_factory = _yaml.YAMLLoaderFactory(_yaml.YAMLLoader, store=store)
 
-    resolver = get_resolver(filename, loader=_Adapter(yaml_loader_factory))
+    resolver = jsonknife.get_resolver(
+        filename, loader=_DictknifeLoaderAdapter(yaml_loader_factory)
+    )
     return Loader(resolver, store=store)
