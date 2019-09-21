@@ -34,7 +34,7 @@
                 nil
                 status
                 (concat .errortype " " .msg " " .where)
-                :id (concat .errortype " " .start)
+                ;; :id (concat .errortype " " .start)
                 :checker checker
                 :buffer buffer
                 :filename .filename
@@ -47,7 +47,7 @@
 
 See URL `https://github.com/podhmo/schemalint'.
 "
-  :command ("schemalint" source)
+  :command ("schemalint" "--always-success" source)
   :error-parser flycheck-yaml-schemalint:parse
   :modes yaml-mode)
 
