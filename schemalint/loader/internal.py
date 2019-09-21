@@ -1,25 +1,10 @@
 import typing as t
-import logging
+
 import yaml.loader as yamlloader
 from yaml.error import MarkedYAMLError  # noqa:
 from dictknife.langhelpers import reify
 
-logger = logging.getLogger(__name__)
-
-
-class NodeStore:
-    def __init__(self):
-        self.cache = {}
-
-    def add_node(self, name, node, r):
-        logger.debug("add_node %s", name)
-        if r is None:
-            return r
-        self.cache[id(r)] = node
-        return r
-
-    def lookup_node(self, data):
-        return self.cache[id(data)]
+from schemalint.entity import NodeStore
 
 
 class Constructor(yamlloader.SafeConstructor):
@@ -43,7 +28,7 @@ class Constructor(yamlloader.SafeConstructor):
         return r
 
 
-# copie from pyyaml
+# almost copy from pyyaml
 class YAMLLoader(
     yamlloader.Reader,
     yamlloader.Scanner,

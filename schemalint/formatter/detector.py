@@ -1,15 +1,17 @@
 from yaml.error import Mark
-from schemalint.loader.internal import NodeStore  # todo: move
 from schemalint.errors import LintError
+from schemalint.entity import Lookup
 
 
 # TODO: move
 
 
 class Detector:
-    def __init__(self, filename: str, *, store: NodeStore):
+    lookup: Lookup
+
+    def __init__(self, filename: str, *, lookup: Lookup):
         self.filename = filename  # root file
-        self.store = store
+        self.lookup = lookup
 
     def has_error_point(self, err: LintError):
         return getattr(err, "problem_mark", None) is not None
@@ -23,7 +25,7 @@ class Detector:
     def detect_loadning_start_point(self, err: LintError) -> (Mark, Mark):
         if err.data is None:
             return self.detect_error_point(err)
-        map_node = self.store.lookup_node(err.data)
+        map_node = self.lookup.lookup_node(err.data)
         knode, vnode = self.lookup_kvpair(map_node, err.path[-1])
         return knode.start_mark, vnode.end_mark
 

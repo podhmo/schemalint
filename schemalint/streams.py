@@ -1,26 +1,10 @@
-from __future__ import annotations
 import typing as t
-from dataclasses import dataclass, field
-
 from dictknife import loading
 from dictknife.langhelpers import reify
 
-from .errors import Error
+from .entity import ErrorEvent, Context
 from .loader import get_loader, Loader
 from .validator import get_validator, Validator
-
-
-@dataclass(frozen=True)
-class ErrorEvent:
-    error: Error  # xxx
-    context: Context
-
-
-@dataclass(unsafe_hash=False, frozen=False)
-class Context:
-    filename: str = ""
-    doc: dict = field(default_factory=dict)
-    loader: Loader = None  # xxx
 
 
 class Stream:  # todo: to protocol
@@ -36,7 +20,7 @@ class StreamFromLoader(Stream):
         self.loader = loader
 
         self._seen = set()
-        ctx.loader = loader  # xxx
+        ctx.lookup = loader.store  # xxx
 
     @reify
     def doc(self) -> dict:

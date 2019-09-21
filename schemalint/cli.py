@@ -17,9 +17,9 @@ def run(filename: str, *, schema: t.Optional[str] = None):
         schemapath = os.path.abspath(schema)
         s = streams.with_schema(s, schemapath, check_schema=True)
 
-    formatter = get_formatter(filepath, loader=s.context.loader)
+    formatter = get_formatter(filepath, lookup=s.context.lookup)
     for ev in s:
-        print(formatter.format(ev.error))
+        print(formatter.format(ev))
 
     print("----------------------------------------")
     subprocess.run(["cat", "-n", filepath])
