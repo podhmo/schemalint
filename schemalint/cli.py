@@ -62,7 +62,7 @@ def describe(store: NodeStore, err: jsonschema.ValidationError) -> str:
     return f"status:{status}	cls:{err.__class__.__name__}	filename:{filename}	start:{start_mark.line+1}@{start_mark.column}	end:{end_mark.line+1}@{end_mark.column}	msg:{msg}	where:{where}"
 
 
-def main(argv=None):
+def main(argv=None, *, run=run):
     import argparse
 
     parser = argparse.ArgumentParser(description=None)
