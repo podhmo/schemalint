@@ -4,6 +4,8 @@ import logging
 
 from magicalimport import import_module
 
+from .entity import Logger
+
 logger = logging.getLogger(__name__)
 
 
@@ -25,20 +27,25 @@ def _find_init_file(
     return None
 
 
-def guess_schema(filename: str, *, current: t.Optional[str] = None) -> t.Optional[str]:
+def guess_schema(
+    filename: str, *, current: t.Optional[str] = None, logger: Logger = logger
+) -> t.Optional[str]:
     filepath = _find_init_file(".schemalint.py", current=current)
     if filepath is None:
-        # todo: 404 event?
+        logger.info(".schemalint.py is not found")
         return None
 
     try:
         m = import_module(filepath)
-        for name in ["schema", "get_schema", "getschema"]:
+        for name in ["schema", "get_schema"]:
             get_schema = getattr(m, name, None)
             if get_schema is not None:
                 schema = get_schema(filepath) if callable(get_schema) else get_schema
                 return os.path.normpath(os.path.join(os.path.dirname(filepath), schema))
     except ModuleNotFoundError as e:
-        # todo: event?
-        logger.warn("%s:schema is not found (%r)", filepath, e.__class__.__name__)
+        logger.info(
+            "not found, %s:schema or get_schema() (%r)", filepath, e.__class__.__name__
+        )
+    except Exception as e:
+        logger.warning("unexpected error %r", e)
     return None
