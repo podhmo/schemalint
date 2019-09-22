@@ -111,11 +111,11 @@ class Logger(Protocol):
 
 class LoggerWithCollectMessage(logging.LoggerAdapter, Logger):
     @reify
-    def history(self) -> t.List[str]:
+    def messages(self) -> t.List[str]:
         return []
 
     def process(
         self, msg: t.Any, kwargs: t.MutableMapping[str, t.Any]
     ) -> t.Tuple[t.Any, t.MutableMapping[str, t.Any]]:
-        self.history.append(msg)
+        self.messages.append(msg)
         return (msg, kwargs)

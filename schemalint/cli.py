@@ -3,6 +3,7 @@ import sys
 import os.path
 import logging
 from schemalint import streams
+from schemalint.entity import LoggerWithCollectMessage
 from schemalint.formatter import get_formatter  # todo: rename
 from schemalint import guess
 
@@ -16,11 +17,16 @@ def run(
     guess_schema: bool,
     always_success: bool,
 ) -> int:
-    if guess_schema:
-        schema = guess.guess_schema(".schemalint.py", current=os.path.dirname(filename))
-
     filepath = os.path.abspath(filename)
     s = streams.from_filename(filepath)
+
+    if guess_schema:
+        wlogger = LoggerWithCollectMessage(logger, {})
+        schema = guess.guess_schema(
+            ".schemalint.py", current=os.path.dirname(filename), logger=wlogger
+        )
+        s = streams.append_messages(s, messages=wlogger.messages)
+
     if schema is not None:
         schemapath = os.path.abspath(schema)
         s = streams.with_schema(s, schemapath, check_schema=True)

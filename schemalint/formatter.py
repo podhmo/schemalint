@@ -5,8 +5,14 @@ import logging
 from yaml.error import Mark
 from typing_extensions import TypedDict, Protocol
 
-from schemalint.entity import ErrorEvent, Lookup
-from schemalint.errors import ParseError, LintError, ResolutionError, ValidationError
+from schemalint.entity import ErrorEvent, Lookup, Context
+from schemalint.errors import (
+    ParseError,
+    LintError,
+    ResolutionError,
+    ValidationError,
+    MessageError,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -96,6 +102,8 @@ class Formatter:
             return self.format_resolution_error(err)
         elif isinstance(err, ValidationError):
             return self.format_validation_error(err)
+        elif isinstance(err, MessageError):
+            return self.format_message_error(err, context=ev.context)
         else:
             raise err
 
@@ -167,6 +175,22 @@ class Formatter:
                 filename=filename,
                 start=f"{start_mark.line+1}@{start_mark.column}",
                 end=f"{end_mark.line+1}@{end_mark.column}",
+                msg=msg,
+                where=where,
+            )
+        )
+
+    def format_message_error(self, err: MessageError, *, context: Context) -> str:
+        status = "INFO"
+        msg = err.args[0]
+        where = [context.filename]
+        return self.layout.layout(
+            OutputDict(
+                status=status,
+                errortype=err.__class__.__name__,
+                filename="",
+                start=f"1@1",
+                end=f"1@-1",
                 msg=msg,
                 where=where,
             )
