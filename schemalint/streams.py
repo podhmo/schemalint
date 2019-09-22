@@ -21,6 +21,7 @@ class StreamFromLoader(Stream):
         self.loader = loader
 
         self._seen = set()
+        ctx.filename = loader.filename  # xxx
         ctx.lookup = loader.store  # xxx
 
     @reify

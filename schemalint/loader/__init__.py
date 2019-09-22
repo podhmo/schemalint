@@ -22,6 +22,10 @@ class Loader:
         self.errors = []
         self.store = store
 
+    @property
+    def filename(self) -> str:
+        return self.resolver.filename
+
     def load(self, doc=None, resolver=None):
         if not doc and doc is not None:
             return doc
