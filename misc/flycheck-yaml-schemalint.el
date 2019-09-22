@@ -22,16 +22,16 @@
     (nreverse r)))
 
 (defun flycheck-yaml-schemalint:parse (output checker buffer)
-  (let (errors)
-    (unless (string-empty-p output)
+  (unless (string-empty-p output)
+    (let (errors)
       (dolist (line (split-string output "\n"))
-        (unless (and line (string-empty-p line))
+        (when (and line (not (string-empty-p line)) (string-prefix-p "status:" line t))
           (let-alist (flycheck-yaml-schemalint:parse-ltsv-line line)
             (let ((status (intern (downcase (or .status "ERROR")))))
               (push
                (flycheck-error-new-at
                 (string-to-int (car (split-string (or .start "") "@")))
-                nil
+                (string-to-int (or (cadr (split-string (or .start "") "@")) "1"))
                 status
                 (concat .errortype " " .msg " " .where)
                 ;; :id (concat .errortype " " .start)
@@ -39,15 +39,15 @@
                 :buffer buffer
                 :filename .filename
                 )
-               errors))))))
-    (nreverse errors)))
+               errors)))))
+      (nreverse errors))))
 
 (flycheck-define-checker yaml-schemalint
   "A Yaml linter using schemalint
 
 See URL `https://github.com/podhmo/schemalint'.
 "
-  :command ("schemalint" "--always-success" source)
+  :command ("schemalint" "--guess-schema" "--always-success" source-original)
   :error-parser flycheck-yaml-schemalint:parse
   :modes yaml-mode)
 
