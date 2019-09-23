@@ -1,9 +1,10 @@
 import typing as t
 import os.path
 import logging
+import json
 
 from yaml.error import Mark
-from typing_extensions import TypedDict, Protocol
+from typing_extensions import TypedDict, Protocol, Literal
 
 from schemalint.entity import ErrorEvent, Lookup, Context
 from schemalint.errors import (
@@ -18,15 +19,20 @@ from schemalint.errors import (
 logger = logging.getLogger(__name__)
 
 
+class PositionDict(TypedDict):
+    line: int
+    character: int
+
+
 class OutputDict(TypedDict):
     status: str
     errortype: str
     filename: str
 
-    start: str
-    end: str
+    start: PositionDict
+    end: PositionDict
 
-    msg: str
+    message: str
     where: t.List[str]
 
 
@@ -37,7 +43,15 @@ class Layout(Protocol):
 
 class LTSVLayout(Layout):
     def layout(self, d: OutputDict) -> str:
+        d["start"] = f"{d['start']['line']}@{d['start']['character']}"
+        d["end"] = f"{d['end']['line']}@{d['end']['character']}"
         return "\t".join(f"{k}:{v}" for k, v in d.items())
+
+
+class JSONLayout(Layout):
+    def layout(self, d: OutputDict) -> str:
+        d["where"] = str(d["where"])
+        return json.dumps(d, ensure_ascii=False)
 
 
 class Detector:
@@ -110,9 +124,9 @@ class Formatter:
     def format_parse_error(self, err: ParseError) -> str:
         status = self.detector.detect_status(err.history[-1])
         if hasattr(err.inner, "problem"):
-            msg = f"{err.inner.problem} ({err.inner.context})"
+            message = f"{err.inner.problem} ({err.inner.context})"
         else:
-            msg = repr(err.inner)
+            message = repr(err.inner)
 
         start_mark, end_mark = self.detector.detect_loadning_start_point(err)
         filename = os.path.relpath(start_mark.name, start=".")
@@ -127,9 +141,11 @@ class Formatter:
                 status=status,
                 errortype=err.__class__.__name__,
                 filename=filename,
-                start=f"{start_mark.line+1}@{start_mark.column}",
-                end=f"{end_mark.line+1}@{end_mark.column}",
-                msg=msg,
+                start=PositionDict(
+                    line=start_mark.line + 1, character=start_mark.column
+                ),
+                end=PositionDict(line=end_mark.line + 1, character=end_mark.column),
+                message=message,
                 where=where,
             )
         )
@@ -138,7 +154,7 @@ class Formatter:
         start_mark, end_mark = self.detector.detect_loadning_start_point(err)
         filename = os.path.relpath(start_mark.name, start=".")
         status = self.detector.detect_status(err.history[-1])
-        msg = repr(err.inner)
+        message = repr(err.inner)
 
         where = [os.path.relpath(name) for name in err.history]
         where[0] = f"{where[0]}:{start_mark.line+1}"
@@ -150,16 +166,18 @@ class Formatter:
                 status=status,
                 errortype=err.__class__.__name__,
                 filename=filename,
-                start=f"{start_mark.line+1}@{start_mark.column}",
-                end=f"{end_mark.line+1}@{end_mark.column}",
-                msg=msg,
+                start=PositionDict(
+                    line=start_mark.line + 1, character=start_mark.column
+                ),
+                end=PositionDict(line=end_mark.line + 1, character=end_mark.column),
+                message=message,
                 where=where,
             )
         )
 
     def format_validation_error(self, err: ValidationError) -> str:
         status = "ERROR"
-        msg = f"{err.message} (validator={err.validator})"
+        message = f"{err.message} (validator={err.validator})"
         node = self.detector.lookup.lookup_node(err.instance)  # xxx
 
         start_mark, end_mark = node.start_mark, node.end_mark
@@ -173,16 +191,18 @@ class Formatter:
                 status=status,
                 errortype=err.__class__.__name__,
                 filename=filename,
-                start=f"{start_mark.line+1}@{start_mark.column}",
-                end=f"{end_mark.line+1}@{end_mark.column}",
-                msg=msg,
+                start=PositionDict(
+                    line=start_mark.line + 1, character=start_mark.column
+                ),
+                end=PositionDict(line=end_mark.line + 1, character=end_mark.column),
+                message=message,
                 where=where,
             )
         )
 
     def format_message_error(self, err: MessageError, *, context: Context) -> str:
         status = "INFO"
-        msg = err.args[0]
+        message = err.args[0]
         filename = os.path.relpath(context.filename)
         where = [filename]
         return self.layout.layout(
@@ -190,14 +210,27 @@ class Formatter:
                 status=status,
                 errortype=err.__class__.__name__,
                 filename=filename,
-                start=f"1@1",
-                end=f"1@-1",
-                msg=msg,
+                start=PositionDict(line=1, character=1),
+                end=PositionDict(line=1, character=-1),
+                message=message,
                 where=where,
             )
         )
 
 
-def get_formatter(filename: str, *, lookup: Lookup) -> Formatter:
+OutputType = Literal["ltsv", "json"]
+
+
+def get_formatter(
+    filename: str, *, lookup: Lookup, output_type: OutputType
+) -> Formatter:
     detector = Detector(filename, lookup=lookup)
-    return Formatter(filename, detector=detector)
+    layout = get_layout(output_type)
+    return Formatter(filename, detector=detector, layout=layout)
+
+
+def get_layout(output_type: OutputType) -> Layout:
+    if output_type == "json":
+        return JSONLayout()
+    else:
+        return LTSVLayout()

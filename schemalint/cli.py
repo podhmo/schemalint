@@ -4,7 +4,7 @@ import os.path
 import logging
 from schemalint import streams
 from schemalint.entity import LoggerWithCollectMessage
-from schemalint.formatter import get_formatter  # todo: rename
+from schemalint.formatter import get_formatter, OutputType
 from schemalint import guess
 
 logger = logging.getLogger(__name__)
@@ -16,6 +16,7 @@ def run(
     schema: t.Optional[str] = None,
     guess_schema: bool,
     always_success: bool,
+    output: OutputType,
 ) -> int:
     filepath = os.path.abspath(filename)
     s = streams.from_filename(filepath)
@@ -31,7 +32,7 @@ def run(
         schemapath = os.path.abspath(schema)
         s = streams.with_schema(s, schemapath, check_schema=True)
 
-    formatter = get_formatter(filepath, lookup=s.context.lookup)
+    formatter = get_formatter(filepath, lookup=s.context.lookup, output_type=output)
 
     success = True
     for ev in s:
@@ -57,6 +58,7 @@ def main(argv=None, *, run=run):
         action="store_true",
         help="finding schema file via .schemalint.py",
     )
+    parser.add_argument("-o", "--output", choices=["ltsv", "json"], default="ltsv")
     parser.add_argument("--always-success", action="store_true")
 
     args = parser.parse_args(argv)
