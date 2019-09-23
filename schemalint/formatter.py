@@ -27,7 +27,7 @@ class OutputDict(TypedDict):
     end: str
 
     msg: str
-    where: str
+    where: t.List[str]
 
 
 class Layout(Protocol):
@@ -183,12 +183,13 @@ class Formatter:
     def format_message_error(self, err: MessageError, *, context: Context) -> str:
         status = "INFO"
         msg = err.args[0]
-        where = [context.filename]
+        filename = os.path.relpath(context.filename)
+        where = [filename]
         return self.layout.layout(
             OutputDict(
                 status=status,
                 errortype=err.__class__.__name__,
-                filename="",
+                filename=filename,
                 start=f"1@1",
                 end=f"1@-1",
                 msg=msg,
