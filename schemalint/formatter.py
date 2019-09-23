@@ -3,7 +3,7 @@ import os.path
 import logging
 
 from yaml.error import Mark
-from typing_extensions import TypedDict, Protocol
+from typing_extensions import TypedDict, Protocol, Literal
 
 from schemalint.entity import ErrorEvent, Lookup, Context
 from schemalint.errors import (
@@ -198,6 +198,15 @@ class Formatter:
         )
 
 
-def get_formatter(filename: str, *, lookup: Lookup) -> Formatter:
+OutputType = Literal["ltsv", "json"]
+
+
+def get_formatter(
+    filename: str, *, lookup: Lookup, output_type: OutputType
+) -> Formatter:
     detector = Detector(filename, lookup=lookup)
-    return Formatter(filename, detector=detector)
+    return Formatter(filename, detector=detector, layout=get_layout(output_type))
+
+
+def get_layout(output_type: OutputType) -> Layout:
+    return LTSVLayout()
