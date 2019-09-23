@@ -32,7 +32,7 @@ class OutputDict(TypedDict):
     start: PositionDict
     end: PositionDict
 
-    msg: str
+    message: str
     where: t.List[str]
 
 
@@ -124,9 +124,9 @@ class Formatter:
     def format_parse_error(self, err: ParseError) -> str:
         status = self.detector.detect_status(err.history[-1])
         if hasattr(err.inner, "problem"):
-            msg = f"{err.inner.problem} ({err.inner.context})"
+            message = f"{err.inner.problem} ({err.inner.context})"
         else:
-            msg = repr(err.inner)
+            message = repr(err.inner)
 
         start_mark, end_mark = self.detector.detect_loadning_start_point(err)
         filename = os.path.relpath(start_mark.name, start=".")
@@ -145,7 +145,7 @@ class Formatter:
                     line=start_mark.line + 1, character=start_mark.column
                 ),
                 end=PositionDict(line=end_mark.line + 1, character=end_mark.column),
-                msg=msg,
+                message=message,
                 where=where,
             )
         )
@@ -154,7 +154,7 @@ class Formatter:
         start_mark, end_mark = self.detector.detect_loadning_start_point(err)
         filename = os.path.relpath(start_mark.name, start=".")
         status = self.detector.detect_status(err.history[-1])
-        msg = repr(err.inner)
+        message = repr(err.inner)
 
         where = [os.path.relpath(name) for name in err.history]
         where[0] = f"{where[0]}:{start_mark.line+1}"
@@ -170,14 +170,14 @@ class Formatter:
                     line=start_mark.line + 1, character=start_mark.column
                 ),
                 end=PositionDict(line=end_mark.line + 1, character=end_mark.column),
-                msg=msg,
+                message=message,
                 where=where,
             )
         )
 
     def format_validation_error(self, err: ValidationError) -> str:
         status = "ERROR"
-        msg = f"{err.message} (validator={err.validator})"
+        message = f"{err.message} (validator={err.validator})"
         node = self.detector.lookup.lookup_node(err.instance)  # xxx
 
         start_mark, end_mark = node.start_mark, node.end_mark
@@ -195,14 +195,14 @@ class Formatter:
                     line=start_mark.line + 1, character=start_mark.column
                 ),
                 end=PositionDict(line=end_mark.line + 1, character=end_mark.column),
-                msg=msg,
+                message=message,
                 where=where,
             )
         )
 
     def format_message_error(self, err: MessageError, *, context: Context) -> str:
         status = "INFO"
-        msg = err.args[0]
+        message = err.args[0]
         filename = os.path.relpath(context.filename)
         where = [filename]
         return self.layout.layout(
@@ -212,7 +212,7 @@ class Formatter:
                 filename=filename,
                 start=PositionDict(line=1, character=1),
                 end=PositionDict(line=1, character=-1),
-                msg=msg,
+                message=message,
                 where=where,
             )
         )
