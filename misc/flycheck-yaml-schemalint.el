@@ -9,45 +9,31 @@
 
 (require 'flycheck) ; For `flycheck-define-checker'
 
-(defun flycheck-yaml-schemalint:parse-ltsv-line (line)
-  (let ((s (string-trim line))
-        r)
-    (dolist (pair (split-string s "\t"))
-      (pcase (split-string pair ":")
-        (`(,x ,y . nil) (push (cons (intern x) y) r))
-        (`(,x . ,ys) (push (cons (intern x) (string-join ys ":")) r))
-        (_ (error "unexpected input: %s", pair))
-        )
-      )
-    (nreverse r)))
-
 (defun flycheck-yaml-schemalint:parse (output checker buffer)
-  (unless (string-empty-p output)
-    (let (errors)
-      (dolist (line (split-string output "\n"))
-        (when (and line (not (string-empty-p line)) (string-prefix-p "status:" line t))
-          (let-alist (flycheck-yaml-schemalint:parse-ltsv-line line)
-            (let ((status (intern (downcase (or .status "ERROR")))))
-              (push
-               (flycheck-error-new-at
-                (string-to-int (car (split-string (or .start "") "@")))
-                (string-to-int (or (cadr (split-string (or .start "") "@")) "1"))
-                status
-                (concat .errortype " " .msg " " .where)
-                ;; :id (concat .errortype " " .start)
-                :checker checker
-                :buffer buffer
-                :filename .filename
-                )
-               errors)))))
-      (nreverse errors))))
+  (let (errors)
+    (dolist (data (flycheck-parse-json output))
+      (let-alist data
+        (let ((status (intern (downcase (or .status "ERROR")))))
+          (push
+           (flycheck-error-new-at
+            (or (assoc-default 'line .start) 1)
+            (or (assoc-default 'character .start) 1)
+            status
+            (concat .errortype " " .message " " .where)
+            ;; :id (concat .errortype " " .start)
+            :checker checker
+            :buffer buffer
+            :filename .filename
+            )
+           errors))))
+    (nreverse errors)))
 
 (flycheck-define-checker yaml-schemalint
   "A Yaml linter using schemalint
 
 See URL `https://github.com/podhmo/schemalint'.
 "
-  :command ("schemalint" "--guess-schema" "--always-success" source-original)
+  :command ("schemalint" "--guess-schema" "--always-success" "-o" "json" source-original)
   :error-parser flycheck-yaml-schemalint:parse
   :modes yaml-mode)
 
