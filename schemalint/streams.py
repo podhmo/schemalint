@@ -3,6 +3,7 @@ from dictknife import loading
 from dictknife.langhelpers import reify
 
 from .entity import ErrorEvent, Context
+from .errors import MessageError
 from .loader import get_loader, Loader
 from .validator import get_validator, Validator
 
@@ -20,6 +21,7 @@ class StreamFromLoader(Stream):
         self.loader = loader
 
         self._seen = set()
+        ctx.filename = loader.filename  # xxx
         ctx.lookup = loader.store  # xxx
 
     @reify
@@ -41,7 +43,30 @@ def from_filename(filepath: str, ctx: t.Optional[Context] = None) -> StreamFromL
 
 def from_loader(loader: Loader, *, ctx: t.Optional[Context] = None) -> StreamFromLoader:
     ctx = ctx or Context()
-    return StreamFromLoader(ctx, loader=loader)
+    s = StreamFromLoader(ctx, loader=loader)
+    ctx.doc = s.doc  # xxx
+    return s
+
+
+class StreamWithMessages(Stream):
+    def __init__(self, stream: StreamFromLoader, *, messages: t.List[str]) -> None:
+        self._stream = stream
+        self.messages = messages
+
+    @property
+    def context(self):
+        return self._stream.context
+
+    def __iter__(self) -> t.Iterable[ErrorEvent]:
+        yield from self._stream
+        for message in self.messages:
+            yield ErrorEvent(error=MessageError(message), context=self.context)
+
+
+def append_messages(
+    stream: StreamFromLoader, *, messages: t.List[str]
+) -> StreamFromLoader:
+    return StreamWithMessages(stream, messages=messages)
 
 
 class StreamWithValidator(Stream):
@@ -51,12 +76,11 @@ class StreamWithValidator(Stream):
 
     @property
     def context(self):
-        self._stream.doc  # xxx:
         return self._stream.context
 
     def __iter__(self) -> t.Iterable[ErrorEvent]:
         yield from self._stream
-        for err in self.validator.iter_errors(self._stream.doc):
+        for err in self.validator.iter_errors(self._stream.context.doc):
             yield ErrorEvent(context=self._stream.context, error=err)
 
 

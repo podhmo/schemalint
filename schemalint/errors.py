@@ -28,4 +28,8 @@ class ResolutionError(LintError):
     pass
 
 
-Error = t.Union[LintError, ValidationError]
+class MessageError(Exception):
+    pass
+
+
+Error = t.Union[LintError, ValidationError, MessageError]
