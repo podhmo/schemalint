@@ -58,7 +58,7 @@ def main(argv=None, *, run=run):
         action="store_true",
         help="finding schema file via .schemalint.py",
     )
-    parser.add_argument("-o", "--output", choices=["ltsv", "json"])
+    parser.add_argument("-o", "--output", choices=["ltsv", "json"], default="ltsv")
     parser.add_argument("--always-success", action="store_true")
 
     args = parser.parse_args(argv)

@@ -1,6 +1,7 @@
 import typing as t
 import os.path
 import logging
+import json
 
 from yaml.error import Mark
 from typing_extensions import TypedDict, Protocol, Literal
@@ -38,6 +39,12 @@ class Layout(Protocol):
 class LTSVLayout(Layout):
     def layout(self, d: OutputDict) -> str:
         return "\t".join(f"{k}:{v}" for k, v in d.items())
+
+
+class JSONLayout(Layout):
+    def layout(self, d: OutputDict) -> str:
+        d["where"] = str(d["where"])
+        return json.dumps(d, ensure_ascii=False)
 
 
 class Detector:
@@ -205,8 +212,12 @@ def get_formatter(
     filename: str, *, lookup: Lookup, output_type: OutputType
 ) -> Formatter:
     detector = Detector(filename, lookup=lookup)
-    return Formatter(filename, detector=detector, layout=get_layout(output_type))
+    layout = get_layout(output_type)
+    return Formatter(filename, detector=detector, layout=layout)
 
 
 def get_layout(output_type: OutputType) -> Layout:
-    return LTSVLayout()
+    if output_type == "json":
+        return JSONLayout()
+    else:
+        return LTSVLayout()
