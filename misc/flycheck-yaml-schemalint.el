@@ -3,7 +3,6 @@
 ;;; Code:
 
 (eval-when-compile
-  (require 'pcase) ; For `pcase'
   (require 'let-alist) ; For `let-alist'
   )
 
