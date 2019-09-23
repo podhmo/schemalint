@@ -16,8 +16,8 @@
         (let ((status (intern (downcase (or .status "ERROR")))))
           (push
            (flycheck-error-new-at
-            (or (assoc-default 'line .start) 1)
-            (or (assoc-default 'character .start) 1)
+            (or .start.line 1)
+            (or .start.chacter 1)
             status
             (concat .errortype " " .message " " .where)
             ;; :id (concat .errortype " " .start)
