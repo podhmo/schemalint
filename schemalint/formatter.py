@@ -19,13 +19,18 @@ from schemalint.errors import (
 logger = logging.getLogger(__name__)
 
 
+class PositionDict(TypedDict):
+    line: int
+    character: int
+
+
 class OutputDict(TypedDict):
     status: str
     errortype: str
     filename: str
 
-    start: str
-    end: str
+    start: PositionDict
+    end: PositionDict
 
     msg: str
     where: t.List[str]
@@ -38,6 +43,8 @@ class Layout(Protocol):
 
 class LTSVLayout(Layout):
     def layout(self, d: OutputDict) -> str:
+        d["start"] = f"{d['start']['line']}@{d['start']['character']}"
+        d["end"] = f"{d['end']['line']}@{d['end']['character']}"
         return "\t".join(f"{k}:{v}" for k, v in d.items())
 
 
@@ -134,8 +141,10 @@ class Formatter:
                 status=status,
                 errortype=err.__class__.__name__,
                 filename=filename,
-                start=f"{start_mark.line+1}@{start_mark.column}",
-                end=f"{end_mark.line+1}@{end_mark.column}",
+                start=PositionDict(
+                    line=start_mark.line + 1, character=start_mark.column
+                ),
+                end=PositionDict(line=end_mark.line + 1, character=end_mark.column),
                 msg=msg,
                 where=where,
             )
@@ -157,8 +166,10 @@ class Formatter:
                 status=status,
                 errortype=err.__class__.__name__,
                 filename=filename,
-                start=f"{start_mark.line+1}@{start_mark.column}",
-                end=f"{end_mark.line+1}@{end_mark.column}",
+                start=PositionDict(
+                    line=start_mark.line + 1, character=start_mark.column
+                ),
+                end=PositionDict(line=end_mark.line + 1, character=end_mark.column),
                 msg=msg,
                 where=where,
             )
@@ -180,8 +191,10 @@ class Formatter:
                 status=status,
                 errortype=err.__class__.__name__,
                 filename=filename,
-                start=f"{start_mark.line+1}@{start_mark.column}",
-                end=f"{end_mark.line+1}@{end_mark.column}",
+                start=PositionDict(
+                    line=start_mark.line + 1, character=start_mark.column
+                ),
+                end=PositionDict(line=end_mark.line + 1, character=end_mark.column),
                 msg=msg,
                 where=where,
             )
@@ -197,8 +210,8 @@ class Formatter:
                 status=status,
                 errortype=err.__class__.__name__,
                 filename=filename,
-                start=f"1@1",
-                end=f"1@-1",
+                start=PositionDict(line=1, character=1),
+                end=PositionDict(line=1, character=-1),
                 msg=msg,
                 where=where,
             )
