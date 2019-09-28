@@ -46,6 +46,9 @@ def guess_schema(
         logger.info(
             "not found, %s:schema or get_schema() (%r)", filepath, e.__class__.__name__
         )
+        return None
     except Exception as e:
         logger.warning("unexpected error %r", e)
+        return None
+    logger.info("not found, %s:schema or get_schema()", filepath)
     return None
