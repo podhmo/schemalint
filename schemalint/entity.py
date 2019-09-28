@@ -117,5 +117,8 @@ class LoggerWithCollectMessage(logging.LoggerAdapter, Logger):
     def process(
         self, msg: t.Any, kwargs: t.MutableMapping[str, t.Any]
     ) -> t.Tuple[t.Any, t.MutableMapping[str, t.Any]]:
-        self.messages.append(msg)
+        import inspect
+
+        args = inspect.currentframe().f_back.f_locals.get("args") or tuple()  # xxx
+        self.messages.append(msg.format(*args))
         return (msg, kwargs)
