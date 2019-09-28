@@ -71,7 +71,7 @@ def main(argv=None, *, run=run):
         if not args.always_success:
             raise
         formatter = get_formatter(args.filename, lookup=None, output_type=args.output)
-        print(formatter.format_message_error(e, context=None))
+        print(formatter.format_message_error(e, context=None, status="ERROR"))
         sys.exit(1)
 
 

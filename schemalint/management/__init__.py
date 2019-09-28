@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 def resolve(
     filepath: t.Optional[str] = None,
     *,
-    schema: str,
+    schema: t.Optional[str] = None,
     package: str = "schemalint.management.resources",
     filename: str = "root.yaml",
     resource: t.Optional[t.Dict[str, t.Any]] = None,
@@ -69,7 +69,4 @@ def get_schema(filepath: str, *, logger: Logger = logger) -> t.Optional[str]:
         return None
     except ModuleNotFoundError as e:
         logger.info("not found (%r)", e.__class__.__name__)
-        return None
-    except Exception as e:
-        logger.warning("unexpected error %r", e)
         return None
