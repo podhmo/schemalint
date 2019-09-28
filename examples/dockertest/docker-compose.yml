@@ -1,0 +1,8 @@
+version: '3'
+services:
+  python3.8:
+    build:
+      context: .
+      dockerfile: ./Dockerfile3.8
+    volumes:
+      - .:/cwd
