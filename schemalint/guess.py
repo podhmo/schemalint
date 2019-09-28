@@ -39,9 +39,14 @@ def guess_schema(
         m = import_module(filepath)
         for name in ["schema", "get_schema"]:
             get_schema = getattr(m, name, None)
-            if get_schema is not None:
-                schema = get_schema(filepath) if callable(get_schema) else get_schema
-                return os.path.normpath(os.path.join(os.path.dirname(filepath), schema))
+            if get_schema is None:
+                continue
+
+            schema = get_schema(filepath) if callable(get_schema) else get_schema
+            if schema is None:
+                continue
+
+            return os.path.normpath(os.path.join(os.path.dirname(filepath), schema))
     except ModuleNotFoundError as e:
         logger.info(
             "not found, %s:schema or get_schema() (%r)", filepath, e.__class__.__name__
