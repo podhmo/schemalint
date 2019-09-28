@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 class ErrorEvent:
     error: Error  # xxx
     context: Context
+    has_soft_error: bool = False
 
 
 @dataclass(unsafe_hash=False, frozen=False)

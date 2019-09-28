@@ -49,7 +49,7 @@ def run(
 
     success = True
     for ev in s:
-        if not always_success and not ev.error.is_soft:
+        if not always_success and not ev.has_soft_error:
             success = False
         print(formatter.format(ev))
     return 0 if success else 1
