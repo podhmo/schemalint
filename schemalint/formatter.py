@@ -200,10 +200,10 @@ class Formatter:
             )
         )
 
-    def format_message_error(self, err: MessageError, *, context: Context) -> str:
+    def format_message_error(self, err: MessageError, *, context: t.Optional[Context]) -> str:
         status = "INFO"
         message = err.args[0]
-        filename = os.path.relpath(context.filename)
+        filename = os.path.relpath(context.filename if context else self.filename)
         where = [filename]
         return self.layout.layout(
             OutputDict(

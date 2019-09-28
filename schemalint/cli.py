@@ -65,7 +65,14 @@ def main(argv=None, *, run=run):
     params = vars(args)
 
     logging.basicConfig(level=params.pop("logging"))
-    sys.exit(run(**params))
+    try:
+        sys.exit(run(**params))
+    except Exception as e:
+        if not args.always_success:
+            raise
+        formatter = get_formatter(args.filename, lookup=None, output_type=args.output)
+        print(formatter.format_message_error(e, context=None))
+        sys.exit(1)
 
 
 if __name__ == "__main__":
