@@ -1,0 +1,48 @@
+{
+  "$ref": "#/definitions/Root",
+  "$schema": "http://json-schema.org/schema#",
+  "definitions": {
+    "Define": {
+      "additionalProperties": false,
+      "dependencies": {
+        "version": [
+          "url"
+        ],
+        "alias": [
+          "version"
+        ]
+      },
+      "properties": {
+        "alias": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "url": {
+          "type": "string"
+        },
+        "version": {
+          "items": {
+            "type": [
+              "string",
+              "number"
+            ]
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "type": "object"
+    },
+    "Root": {
+      "additionalProperties": {
+        "$ref": "#/definitions/Define"
+      },
+      "type": "object"
+    }
+  },
+  "title": "schemalint's resource definition"
+}
