@@ -17,6 +17,10 @@ class LintError(Exception):
     def __str__(self):
         return f"{self.__class__.__name__}: {self.inner}"
 
+    @property
+    def is_soft(self):
+        return False
+
 
 class ParseError(LintError):
     # usually, inner is MarkedYAMLError
@@ -29,7 +33,9 @@ class ResolutionError(LintError):
 
 
 class MessageError(Exception):
-    pass
+    @property
+    def is_soft(self):
+        return True
 
 
 Error = t.Union[LintError, ValidationError, MessageError]
