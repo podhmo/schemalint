@@ -36,7 +36,7 @@ def run(
 
     success = True
     for ev in s:
-        if not always_success:
+        if not always_success and not ev.error.is_soft:
             success = False
         print(formatter.format(ev))
     return 0 if success else 1
