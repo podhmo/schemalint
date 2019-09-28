@@ -60,7 +60,9 @@ class StreamWithMessages(Stream):
     def __iter__(self) -> t.Iterable[ErrorEvent]:
         yield from self._stream
         for message in self.messages:
-            yield ErrorEvent(error=MessageError(message), context=self.context)
+            yield ErrorEvent(
+                error=MessageError(message), context=self.context, has_soft_error=True
+            )
 
 
 def append_messages(

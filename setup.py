@@ -1,7 +1,13 @@
 from setuptools import setup, find_packages
 
 
-install_requires = ["dictknife[load]", "jsonschema", "typing_extensions"]
+install_requires = [
+    "dictknife[load]",
+    "jsonschema",
+    "typing_extensions",
+    "magicalimport",
+    "importlib_resources"  # for <3.7
+]
 dev_requires = ["black", "flake8"]
 tests_requires = []
 

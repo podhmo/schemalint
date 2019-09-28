@@ -1,0 +1,66 @@
+{
+  "$ref": "#/definitions/Root",
+  "$schema": "http://json-schema.org/schema#",
+  "definitions": {
+    "Resource": {
+      "additionalProperties": false,
+      "dependencies": {
+        "alias": [
+          "version"
+        ],
+        "version": [
+          "url",
+          "get-version"
+        ]
+      },
+      "properties": {
+        "alias": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "get-version": {
+          "description": "json reference",
+          "example": "#/veresion",
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "version": {
+          "items": {
+            "type": [
+              "string",
+              "number"
+            ]
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "type": "object"
+    },
+    "Root": {
+      "additionalProperties": {
+        "$ref": "#/definitions/Resource"
+      },
+      "example": {
+        "docker-compose.yml": {
+          "alias": {
+            "3": "3.7"
+          },
+          "url": "https://raw.githubusercontent.com/docker/compose/master/compose/config/config_schema_v{version}.json",
+          "version": [
+            3.7,
+            3.6
+          ]
+        }
+      },
+      "type": "object"
+    }
+  },
+  "title": "schemalint's resource definition"
+}
