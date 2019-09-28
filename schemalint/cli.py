@@ -4,6 +4,7 @@ import os.path
 import logging
 from schemalint import streams
 from schemalint.entity import LoggerWithCollectMessage
+from schemalint.validator import get_validator
 from schemalint.formatter import get_formatter, OutputType
 from schemalint import guess
 
@@ -13,7 +14,7 @@ logger = logging.getLogger(__name__)
 def run(
     filename: str,
     *,
-    schema: t.Optional[str] = None,
+    schema: t.Union[None, str, dict] = None,
     guess_schema: bool,
     always_success: bool,
     output: OutputType,
@@ -24,14 +25,26 @@ def run(
     if guess_schema:
         wlogger = LoggerWithCollectMessage(logger, {})
         schema = guess.guess_schema(
-            ".schemalint.py", current=os.path.dirname(filename), logger=wlogger
+            filepath,
+            code=".schemalint.py",
+            current=os.path.dirname(filename),
+            logger=wlogger,
         )
         s = streams.append_messages(s, messages=wlogger.messages)
 
     if schema is not None:
-        schemapath = os.path.abspath(schema)
-        s = streams.with_schema(s, schemapath, check_schema=True)
+        if isinstance(schema, str):
+            if schema.startswith(("https://", "http://")):
+                import requests
 
+                schema = requests.get(schema).json()
+            else:
+                from dictknife import loading
+
+                schema = loading.loadfile(schema)
+
+        validator = get_validator(schema, check_schema=True)  # TODO: skip_check option
+        s = streams.with_validator(s, validator)
     formatter = get_formatter(filepath, lookup=s.context.lookup, output_type=output)
 
     success = True

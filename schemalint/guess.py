@@ -27,10 +27,14 @@ def _find_init_file(
 
 
 def guess_schema(
-    filename: str, *, current: t.Optional[str] = None, logger: Logger = logger
-) -> t.Optional[str]:
-    filepath = _find_init_file(".schemalint.py", current=current)
-    if filepath is None:
-        logger.info(".schemalint.py is not found")
+    filepath: str,
+    *,
+    code: str,
+    current: t.Optional[str] = None,
+    logger: Logger = logger
+) -> t.Union[None, str, dict]:
+    codepath = _find_init_file(code, current=current)
+    if codepath is None:
+        logger.info("%s is not found, for %s", code, filepath)
         return None
-    return management.get_schema(filepath, logger=logger)
+    return management.get_schema(filepath, codepath=codepath, logger=logger)
