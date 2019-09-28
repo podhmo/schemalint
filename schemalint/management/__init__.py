@@ -30,11 +30,13 @@ def resolve(
 def _resolve_resource(
     package: str, *, name: t.Optional[str], support_extensions=(".yaml", ".yml")
 ) -> dict:
+    logger.info("resolve resource, find resource from %s", package)
     for fname in importlib_resources.contents(package):
         if not os.path.splitext(fname)[1].endswith(support_extensions):
             continue
         name = fname
         break
+    logger.info("resolve resource, load data from %s", name)
     with importlib_resources.open_text(package, name) as rf:
         return loading.load(rf)
 
@@ -60,19 +62,32 @@ def _resolve_path(path: str, resource: t.Dict[str, t.Any]) -> t.Optional[str]:
 
     # loadata (TODO:shared loaded data)
     from dictknife import loading
+    from dictknife.jsonknife import access_by_json_pointer
 
     data = loading.loadfile(filepath)
-    version = str(data.get("version") or definition["veresion"][0])
+    try:
+        logger.info(
+            "resolve schema, get version via %r, from %s",
+            definition["get-version"],
+            filepath,
+        )
+        version = str(access_by_json_pointer(data, definition["get-version"]))
+    except KeyError:
+        logger.info(
+            "resolve schema, version is not found, guess latest version from %s",
+            definition.get("version"),
+        )
+        version = definition["version"][0]
+    logger.info("resolve schema, got version %s", version)
 
     if "alias" in definition:
-        version = definition["alias"].get(version, version)
+        old_version, version = version, definition["alias"].get(version, version)
+        logger.info("resolve schema, use alias %s -> %s", old_version, version)
 
     return url.format(version=version)
 
 
-def _get_schema(
-    filepath: str, *, codepath: str, logger: Logger = logger
-) -> t.Union[str, dict, None]:
+def get_schema(filepath: str, *, codepath: str) -> t.Union[str, dict, None]:
     m = import_module(codepath)
     for name in ["schema", "get_schema"]:
         # t.Optional[get_schema_fn_type, t.Union[t.Optional[str]]]
@@ -87,25 +102,3 @@ def _get_schema(
             return os.path.normpath(os.path.join(os.path.dirname(codepath), schema))
         return schema
     return None
-
-
-def get_schema(
-    filepath: str, *, codepath: str, logger: Logger = logger
-) -> t.Union[str, dict, None]:
-    # filepath is the path of target yaml file
-    # codepath is the path of python script to resolve validation schema
-    try:
-        schema = _get_schema(filepath, codepath=codepath, logger=logger)
-        if schema is not None:
-            return schema
-        logger.info(
-            "for %s, not found, in %s, schema or get_schema() is not found, or return None",
-            filepath,
-            codepath,
-        )
-        return None
-    except ModuleNotFoundError as e:
-        logger.info(
-            "for %s, %s is not found (%r)", filepath, codepath, e.__class__.__name__
-        )
-        return None

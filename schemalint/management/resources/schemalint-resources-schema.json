@@ -9,7 +9,8 @@
           "version"
         ],
         "version": [
-          "url"
+          "url",
+          "get-version"
         ]
       },
       "properties": {
@@ -18,6 +19,11 @@
             "type": "string"
           },
           "type": "object"
+        },
+        "get-version": {
+          "description": "json reference",
+          "example": "#/veresion",
+          "type": "string"
         },
         "url": {
           "type": "string"
@@ -49,7 +55,7 @@
           "url": "https://raw.githubusercontent.com/docker/compose/master/compose/config/config_schema_v{version}.json",
           "version": [
             3.7,
-            3.6,
+            3.6
           ]
         }
       },
