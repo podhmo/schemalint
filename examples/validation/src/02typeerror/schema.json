@@ -1,0 +1,27 @@
+{
+  "definitions": {
+    "Person": {
+      "properties": {
+        "age": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
+    }
+  },
+  "properties": {
+    "father": {
+      "$ref": "#/definitions/Person"
+    },
+    "mother": {
+      "$ref": "#/definitions/Person"
+    }
+  },
+  "type": "object"
+}
