@@ -16,9 +16,9 @@
           (push
            (flycheck-error-new-at
             (or .start.line 1)
-            (or .start.chacter 1)
+            (or .start.character 1)
             status
-            (concat .errortype " " .message " " .where)
+            (format "%s %s %s" .errortype .message .where)
             ;; :id (concat .errortype " " .start)
             :checker checker
             :buffer buffer
