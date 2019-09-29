@@ -121,5 +121,5 @@ class LoggerWithCollectMessage(logging.LoggerAdapter, Logger):
         import inspect
 
         args = inspect.currentframe().f_back.f_locals.get("args") or tuple()  # xxx
-        self.messages.append(msg.format(*args))
+        self.messages.append(msg % args)
         return (msg, kwargs)
