@@ -8,7 +8,17 @@ from handofcats import as_command
 
 
 def execute_schemalint(filename: str, *, schema: str) -> t.Iterable[t.Dict[str, t.Any]]:
-    cmd = [sys.executable, "-m", "schemalint", "-s", schema, "-o", "json", filename]
+    cmd = [
+        sys.executable,
+        "-m",
+        "schemalint",
+        "-s",
+        schema,
+        "-o",
+        "json",
+        filename,
+        "--always-success",
+    ]
     p = subprocess.run(cmd, stdout=subprocess.PIPE, text=True)
 
     for line in p.stdout.strip().split("\n"):
@@ -16,9 +26,12 @@ def execute_schemalint(filename: str, *, schema: str) -> t.Iterable[t.Dict[str, 
 
 
 def execute_cat(filename: str) -> t.Iterable[t.Tuple[int, str]]:
-    with open(filename) as rf:
-        for i, line in enumerate(rf, 1):
-            yield i, line.rstrip()
+    try:
+        with open(filename) as rf:
+            for i, line in enumerate(rf, 1):
+                yield i, line.rstrip()
+    except FileNotFoundError as e:
+        print(e)
 
 
 @as_command
