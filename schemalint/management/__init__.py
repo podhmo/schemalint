@@ -88,7 +88,7 @@ def _resolve_path(path: str, resource: t.Dict[str, t.Any]) -> t.Optional[str]:
 
 
 def get_schema(filepath: str, *, codepath: str) -> t.Union[str, dict, None]:
-    m = import_module(codepath)
+    m = import_module(codepath, cwd=True)
     for name in ["schema", "get_schema"]:
         # t.Optional[get_schema_fn_type, t.Union[t.Optional[str]]]
         get_schema_fn = getattr(m, name, None)
