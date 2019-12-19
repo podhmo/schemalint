@@ -1,0 +1,9 @@
+#0 ERROR ValidationError 'name' is a required property (validator=required)
+-
+#0 > 01:{
+     02:  "age": 20,
+     03:  "father": {
+     04:    "name": "foo",
+     05:    "age": 20
+     06:  }
+     07:}

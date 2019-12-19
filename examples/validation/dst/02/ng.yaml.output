@@ -1,0 +1,8 @@
+#0 ERROR ValidationError 'bar' is not of type 'integer' (validator=type)
+-
+     01:father:
+     02:  name: foo
+     03:  age: 20
+     04:mother:
+     05:  name: bar
+#0 > 06:  age: bar
